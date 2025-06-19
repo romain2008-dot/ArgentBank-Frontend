@@ -1,11 +1,12 @@
 import { useSelector, useDispatch } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
 import { logout } from '../../store/slices/authSlice'
-import logo from '../../assets/argentBankLogo.webp'
+import logo from '../../../public/assets/argentBankLogo.webp'
 import './Nav.css'
 
 function Nav() {
-    const { isAuthenticated, user } = useSelector((state) => state.auth)
+    const { isAuthenticated } = useSelector((state) => state.auth)
+    const { userName } = useSelector((state) => state.user)
     const dispatch = useDispatch()
     const navigate = useNavigate()
     
@@ -23,7 +24,7 @@ function Nav() {
                 <div className='main-nav-items'>
                     <Link to="/profile" className='main-nav-item'>
                         <i className="fa fa-user-circle"></i>
-                        {user?.userName || user?.firstName || 'User'}
+                        {userName || 'User'}
                     </Link>
                     <Link 
                         to="#"

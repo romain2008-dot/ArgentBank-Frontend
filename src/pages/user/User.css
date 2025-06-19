@@ -11,3 +11,8 @@
   padding: 10px;
   cursor: pointer;
 }
+
+.edit-form{
+  max-width: 300px;
+  margin: 0 auto;
+}

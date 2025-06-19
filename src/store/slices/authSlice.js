@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 
-// Actions asynchrones
+// === LOGIN : ne renvoie que le token, pas le user ===
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async ({ email, password }, { rejectWithValue }) => {
@@ -12,34 +12,34 @@ export const loginUser = createAsyncThunk(
         },
         body: JSON.stringify({ email, password }),
       })
-      
+
       const data = await response.json()
-      
+
       if (!response.ok) {
         return rejectWithValue(data.message || 'Erreur de connexion')
       }
-      
-      // Stocker le token dans localStorage
-      localStorage.setItem('token', data.body.token)
-      
-      return data.body.token
+
+      const { token } = data.body
+      localStorage.setItem('token', token)
+      return token
     } catch (error) {
       return rejectWithValue('Erreur réseau')
     }
   }
 )
 
+// === GET PROFILE : déclenché après login ou au refresh ===
 export const getUserProfile = createAsyncThunk(
   'auth/getUserProfile',
   async (_, { getState, rejectWithValue }) => {
+    const { auth } = getState()
+    const token = auth.token || localStorage.getItem('token')
+
+    if (!token) {
+      return rejectWithValue('Token manquant')
+    }
+
     try {
-      const { auth } = getState()
-      const token = auth.token || localStorage.getItem('token')
-      
-      if (!token) {
-        return rejectWithValue('Token manquant')
-      }
-      
       const response = await fetch('http://localhost:3001/api/v1/user/profile', {
         method: 'GET',
         headers: {
@@ -47,13 +47,13 @@ export const getUserProfile = createAsyncThunk(
           'Content-Type': 'application/json',
         },
       })
-      
+
       const data = await response.json()
-      
+
       if (!response.ok) {
         return rejectWithValue(data.message || 'Erreur lors de la récupération du profil')
       }
-      
+
       return data.body
     } catch (error) {
       return rejectWithValue('Erreur réseau')
@@ -61,39 +61,7 @@ export const getUserProfile = createAsyncThunk(
   }
 )
 
-export const updateUserProfile = createAsyncThunk(
-  'auth/updateUserProfile',
-  async ({ userName }, { getState, rejectWithValue }) => {
-    try {
-      const { auth } = getState()
-      const token = auth.token || localStorage.getItem('token')
-      
-      if (!token) {
-        return rejectWithValue('Token manquant')
-      }
-      
-      const response = await fetch('http://localhost:3001/api/v1/user/profile', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userName }),
-      })
-      
-      const data = await response.json()
-      
-      if (!response.ok) {
-        return rejectWithValue(data.message || 'Erreur lors de la mise à jour')
-      }
-      
-      return data.body
-    } catch (error) {
-      return rejectWithValue('Erreur réseau')
-    }
-  }
-)
-
+// === SLICE ===
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
@@ -117,7 +85,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Login
+      // === LOGIN ===
       .addCase(loginUser.pending, (state) => {
         state.isLoading = true
         state.error = null
@@ -126,14 +94,14 @@ const authSlice = createSlice({
         state.isLoading = false
         state.token = action.payload
         state.isAuthenticated = true
-        state.error = null
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false
-        state.error = action.payload.replace('Error: ', '')
+        state.error = action.payload
         state.isAuthenticated = false
       })
-      // Get Profile
+
+      // === GET PROFILE ===
       .addCase(getUserProfile.pending, (state) => {
         state.isLoading = true
       })
@@ -144,26 +112,21 @@ const authSlice = createSlice({
       })
       .addCase(getUserProfile.rejected, (state, action) => {
         state.isLoading = false
-        state.error = action.payload
-        if (action.payload === 'Token manquant') {
-          state.isAuthenticated = false
+        const error = action.payload
+
+        // Auto logout si token invalide
+        if (
+          error === 'Token manquant' ||
+          error === 'Token invalide' ||
+          error === 'Erreur lors de la récupération du profil'
+        ) {
           state.token = null
+          state.user = null
+          state.isAuthenticated = false
           localStorage.removeItem('token')
         }
-      })
-      // Update Profile
-      .addCase(updateUserProfile.pending, (state) => {
-        state.isLoading = true
-        state.error = null
-      })
-      .addCase(updateUserProfile.fulfilled, (state, action) => {
-        state.isLoading = false
-        state.user = action.payload
-        state.error = null
-      })
-      .addCase(updateUserProfile.rejected, (state, action) => {
-        state.isLoading = false
-        state.error = action.payload
+
+        state.error = error
       })
   },
 })

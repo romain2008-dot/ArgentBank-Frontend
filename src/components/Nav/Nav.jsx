@@ -6,7 +6,7 @@ import './Nav.css'
 
 function Nav() {
     const { isAuthenticated } = useSelector((state) => state.auth)
-    const { userName } = useSelector((state) => state.user)
+    const { userName } = useSelector((state) => state.user) // Assurez-vous que le userName est bien récupéré ici
     const dispatch = useDispatch()
     const navigate = useNavigate()
     

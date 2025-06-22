@@ -28,39 +28,6 @@ export const loginUser = createAsyncThunk(
   }
 )
 
-// === GET PROFILE : déclenché après login ou au refresh ===
-export const getUserProfile = createAsyncThunk(
-  'auth/getUserProfile',
-  async (_, { getState, rejectWithValue }) => {
-    const { auth } = getState()
-    const token = auth.token || localStorage.getItem('token')
-
-    if (!token) {
-      return rejectWithValue('Token manquant')
-    }
-
-    try {
-      const response = await fetch('http://localhost:3001/api/v1/user/profile', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        return rejectWithValue(data.message || 'Erreur lors de la récupération du profil')
-      }
-
-      return data.body
-    } catch (error) {
-      return rejectWithValue('Erreur réseau')
-    }
-  }
-)
-
 // === SLICE ===
 const authSlice = createSlice({
   name: 'auth',
@@ -99,34 +66,6 @@ const authSlice = createSlice({
         state.isLoading = false
         state.error = action.payload
         state.isAuthenticated = false
-      })
-
-      // === GET PROFILE ===
-      .addCase(getUserProfile.pending, (state) => {
-        state.isLoading = true
-      })
-      .addCase(getUserProfile.fulfilled, (state, action) => {
-        state.isLoading = false
-        state.user = action.payload
-        state.error = null
-      })
-      .addCase(getUserProfile.rejected, (state, action) => {
-        state.isLoading = false
-        const error = action.payload
-
-        // Auto logout si token invalide
-        if (
-          error === 'Token manquant' ||
-          error === 'Token invalide' ||
-          error === 'Erreur lors de la récupération du profil'
-        ) {
-          state.token = null
-          state.user = null
-          state.isAuthenticated = false
-          localStorage.removeItem('token')
-        }
-
-        state.error = error
       })
   },
 })

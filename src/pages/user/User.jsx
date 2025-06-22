@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { getUserProfile } from '../../store/slices/authSlice'
+import { getUserProfile } from '../../store/slices/userSlice'
 import { updateUserName } from '../../store/slices/userSlice' 
 import Account from '../../components/Account/Account'
 import accountsData from '../../data/accounts.json'

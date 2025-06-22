@@ -34,6 +34,39 @@ export const updateUserName = createAsyncThunk(
   }
 )
 
+// === GET PROFILE ===
+export const getUserProfile = createAsyncThunk(
+  'user/getUserProfile',
+  async (_, { getState, rejectWithValue }) => {
+    const { auth } = getState()
+    const token = auth.token || localStorage.getItem('token')
+
+    if (!token) {
+      return rejectWithValue('Token manquant')
+    }
+
+    try {
+      const response = await fetch('http://localhost:3001/api/v1/user/profile', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return rejectWithValue(data.message || 'Erreur lors de la récupération du profil')
+      }
+
+      return data.body
+    } catch (error) {
+      return rejectWithValue('Erreur réseau')
+    }
+  }
+)
+
 const userSlice = createSlice({
   name: 'user',
   initialState: {
@@ -42,12 +75,12 @@ const userSlice = createSlice({
     error: null,
   },
   reducers: {
+    resetUserName: (state) => {
+      state.userName = ''
+    },
     clearError: (state) => {
       state.error = null
     },
-    resetUserName: (state) => {
-      state.userName = ''
-    }
   },
   extraReducers: (builder) => {
     builder
@@ -72,8 +105,31 @@ const userSlice = createSlice({
           localStorage.removeItem('token')
         }
       })
-  },
+      .addCase(getUserProfile.pending, (state) => {
+        state.isLoading = true
+      })
+      .addCase(getUserProfile.fulfilled, (state, action) => {
+        state.isLoading = false
+        state.userName = action.payload.userName
+        state.error = null
+      })
+      .addCase(getUserProfile.rejected, (state, action) => {
+        state.isLoading = false
+        const error = action.payload
+
+        // Auto logout si token invalide
+        if (
+          error === 'Token manquant' ||
+          error === 'Token invalide' ||
+          error === 'Erreur lors de la récupération du profil'
+        ) {
+          localStorage.removeItem('token')
+        }
+
+        state.error = error
+      })
+  }
 })
 
-export const { clearError, resetUserName } = userSlice.actions
+export const { resetUserName, clearError } = userSlice.actions
 export default userSlice.reducer

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
 import { getUserProfile } from '../../store/slices/userSlice'
 import { updateUserName } from '../../store/slices/userSlice' 
 import Account from '../../components/Account/Account'
@@ -12,22 +11,20 @@ function User() {
     const [newUserName, setNewUserName] = useState('')
     
     const dispatch = useDispatch()
-    const navigate = useNavigate()
-    const { user, isAuthenticated, isLoading, error } = useSelector((state) => state.auth)
-    const { userName: currentUserName, isLoading: userLoading, error: userError } = useSelector((state) => state.user) // Sélectionnez l'état de la nouvelle slice
+    const { isAuthenticated, isLoading, error } = useSelector((state) => state.auth)
+    const { userName, firstName, lastName, isLoading: userLoading, error: userError } = useSelector((state) => state.user)
 
     useEffect(() => {
-        
-        if (!user) {
+        if (isAuthenticated) {
             dispatch(getUserProfile())
         }
-    }, [isAuthenticated, user, dispatch, navigate])
+    }, [isAuthenticated, dispatch])
     
     useEffect(() => {
-        if (user) {
-            setNewUserName(user.userName || '')
+        if (userName) {
+            setNewUserName(userName || '')
         }
-    }, [user])
+    }, [userName])
     
     const handleEditClick = () => {
         setIsEditing(true)
@@ -49,7 +46,7 @@ function User() {
     }
     
     const handleCancel = () => {
-        setNewUserName(user?.userName || '')
+        setNewUserName(userName || '')
         setIsEditing(false)
     }
     
@@ -63,7 +60,7 @@ function User() {
                 {isEditing ? (
                     <div className="edit-form">
                         <h1>Welcome back<br />
-                        {user?.firstName} {user?.lastName}!
+                        {firstName} {lastName}!
                         </h1>
                         <form onSubmit={handleSave}>
                             <div className="input-wrapper">
@@ -81,7 +78,7 @@ function User() {
                                 <input
                                     type="text"
                                     id="firstName"
-                                    value={user?.firstName || ''}
+                                    value={firstName || ''}
                                     disabled
                                     placeholder="First name"
                                 />
@@ -91,7 +88,7 @@ function User() {
                                 <input
                                     type="text"
                                     id="lastName"
-                                    value={user?.lastName || ''}
+                                    value={lastName || ''}
                                     disabled
                                     placeholder="Last name"
                                 />
@@ -128,7 +125,7 @@ function User() {
                 ) : (
                     <>
                     <h1>Welcome back<br />
-                            {user?.firstName} {user?.lastName}!
+                            {firstName} {lastName}!
                         </h1>
                         <button className="edit-button" onClick={handleEditClick}>
                             Edit Name

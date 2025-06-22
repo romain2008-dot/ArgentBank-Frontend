@@ -71,12 +71,18 @@ const userSlice = createSlice({
   name: 'user',
   initialState: {
     userName: '',
+    firstName: '',
+    lastName: '',
+    email: '',
     isLoading: false,
     error: null,
   },
   reducers: {
-    resetUserName: (state) => {
+    resetUserData: (state) => {
       state.userName = ''
+      state.firstName = ''
+      state.lastName = ''
+      state.email = ''
     },
     clearError: (state) => {
       state.error = null
@@ -97,7 +103,7 @@ const userSlice = createSlice({
         state.isLoading = false
         state.error = action.payload
 
-        // Gestion automatique d’un token invalide
+        // Gestion automatique d'un token invalide
         if (
           action.payload === 'Token manquant' ||
           action.payload === 'Token invalide'
@@ -111,6 +117,9 @@ const userSlice = createSlice({
       .addCase(getUserProfile.fulfilled, (state, action) => {
         state.isLoading = false
         state.userName = action.payload.userName
+        state.firstName = action.payload.firstName
+        state.lastName = action.payload.lastName
+        state.email = action.payload.email
         state.error = null
       })
       .addCase(getUserProfile.rejected, (state, action) => {
@@ -131,5 +140,5 @@ const userSlice = createSlice({
   }
 })
 
-export const { resetUserName, clearError } = userSlice.actions
+export const { resetUserData, clearError } = userSlice.actions
 export default userSlice.reducer

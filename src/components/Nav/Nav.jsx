@@ -1,14 +1,22 @@
 import { useSelector, useDispatch } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { logout } from '../../store/slices/authSlice'
+import { getUserProfile } from '../../store/slices/userSlice'
 import logo from '../../../public/assets/argentBankLogo.webp'
 import './Nav.css'
 
 function Nav() {
     const { isAuthenticated } = useSelector((state) => state.auth)
-    const { userName } = useSelector((state) => state.user) // Assurez-vous que le userName est bien récupéré ici
+    const { userName } = useSelector((state) => state.user)
     const dispatch = useDispatch()
     const navigate = useNavigate()
+    
+    useEffect(() => {
+        if (isAuthenticated && !userName) {
+            dispatch(getUserProfile())
+        }
+    }, [isAuthenticated, userName, dispatch])
     
     const handleLogout = () => {
         dispatch(logout())

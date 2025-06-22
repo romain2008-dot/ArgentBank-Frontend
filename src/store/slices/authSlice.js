@@ -1,9 +1,19 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 
+// Fonction utilitaire pour gérer le stockage
+const getStoredToken = () => {
+  return localStorage.getItem('token') || sessionStorage.getItem('token')
+}
+
+const removeStoredToken = () => {
+  localStorage.removeItem('token')
+  sessionStorage.removeItem('token')
+}
+
 // === LOGIN : ne renvoie que le token, pas le user ===
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
-  async ({ email, password }, { rejectWithValue }) => {
+  async ({ email, password, rememberMe }, { rejectWithValue }) => {
     try {
       const response = await fetch('http://localhost:3001/api/v1/user/login', {
         method: 'POST',
@@ -20,7 +30,16 @@ export const loginUser = createAsyncThunk(
       }
 
       const { token } = data.body
-      localStorage.setItem('token', token)
+      
+      // Stocker selon le choix de l'utilisateur
+      if (rememberMe) {
+        localStorage.setItem('token', token)
+        sessionStorage.removeItem('token') // Nettoyer l'autre storage
+      } else {
+        sessionStorage.setItem('token', token)
+        localStorage.removeItem('token') // Nettoyer l'autre storage
+      }
+      
       return token
     } catch (error) {
       return rejectWithValue('Erreur réseau')
@@ -33,10 +52,10 @@ const authSlice = createSlice({
   name: 'auth',
   initialState: {
     user: null,
-    token: localStorage.getItem('token') || null,
+    token: getStoredToken(),
     isLoading: false,
     error: null,
-    isAuthenticated: !!localStorage.getItem('token'),
+    isAuthenticated: !!getStoredToken(),
   },
   reducers: {
     logout: (state) => {
@@ -44,7 +63,7 @@ const authSlice = createSlice({
       state.token = null
       state.isAuthenticated = false
       state.error = null
-      localStorage.removeItem('token')
+      removeStoredToken()
     },
     clearError: (state) => {
       state.error = null

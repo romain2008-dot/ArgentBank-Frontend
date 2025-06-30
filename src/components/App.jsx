@@ -1,9 +1,11 @@
+import { lazy, Suspense } from "react"
 import { createBrowserRouter, RouterProvider } from "react-router-dom"
 import Layout from "./Layout"
-import Home from "../pages/home/home"
-import Login from "../pages/login/Login"
-import User from "../pages/user/User"
 import ProtectedRoute from "./ProtectedRoute"
+
+const Home = lazy(() => import("../pages/home/home"))
+const Login = lazy(() => import("../pages/login/Login"))
+const User = lazy(() => import("../pages/user/User"))
 
 const router = createBrowserRouter([
   {
@@ -11,17 +13,27 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <Home />,
+        element: (
+          <Suspense fallback={<div>Chargement...</div>}>
+            <Home />
+          </Suspense>
+        ),
       },
       {
         path: "/login",
-        element: <Login />,
+        element: (
+          <Suspense fallback={<div>Chargement...</div>}>
+            <Login />
+          </Suspense>
+        ),
       },
       {
         path: "/profile",
         element: (
           <ProtectedRoute>
-            <User />
+            <Suspense fallback={<div>Chargement...</div>}>
+              <User />
+            </Suspense>
           </ProtectedRoute>
         ),
       },

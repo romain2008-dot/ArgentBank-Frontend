@@ -33,12 +33,7 @@ function Login() {
             return
         }
         
-        try {
             await dispatch(loginUser({ email, password, rememberMe })).unwrap()
-            // La redirection se fera via useEffect
-        } catch (error) {
-            // L'erreur est gérée par le slice
-        }
     }
     
     return (

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { getUserProfile } from '../../store/slices/userSlice'
-import { updateUserName } from '../../store/slices/userSlice' 
+import { getUserProfile, updateUserName } from '../../store/slices/userSlice'
 import Account from '../../components/Account/Account'
 import accountsData from '../../data/accounts.json'
 import './User.css'
@@ -37,12 +36,8 @@ function User() {
             return
         }
         
-        try {
             await dispatch(updateUserName({ userName: newUserName.trim() })).unwrap()
             setIsEditing(false)
-        } catch (error) {
-            // L'erreur est gérée par le slice
-        }
     }
     
     const handleCancel = () => {

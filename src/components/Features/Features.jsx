@@ -3,8 +3,6 @@ import './Features.css'
 import featuresData from '../../data/features.json'
 
 function Features() {
-    
-
     return (
         <section className="features">
             <h2 className="sr-only">Features</h2>
